@@ -2,32 +2,41 @@ package io.bs.gitlist
 
 import io.bs.voting.IntegrationSpec
 import io.bs.voting.candidate.domain.CandidateFacade
+import io.bs.voting.voter.domain.VoterFacade
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.ResultActions
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 class AcceptanceSpec extends IntegrationSpec {
     @Autowired
     CandidateFacade candidateFacade
+    @Autowired
+    VoterFacade voterFacade
 
     def "successful add candidate"() {
         when:
-        ResultActions getRepositories = mockMvc.perform(get("/users/torvalds/repos"))
+        ResultActions addCandidate = mockMvc.perform(post("/candidate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
 
         then:
-        getRepositories.andExpect( status().isOk() )
-                .andExpect(jsonPath("\$[*].name").value(["linux","pesconvert","test-tlb","uemacs"]))
+        addCandidate.andExpect( status().is2xxSuccessful() )
     }
 
-    def "github user not exist scenario"() {
-        when: 'I go to /users/thispersondoesnotexist/repos'
-        ResultActions getRepositories = mockMvc.perform(get("/users/qdnownfwovcnviueavibunajnnborqdnownfwovcnviueavibunajnnbor/repos"))
+    def "successful cast vote"() {
+        given:
+        candidateFacade.add("kandydat")
+        voterFacade.add("glosujacy")
 
-        then: 'I get error message'
-        getRepositories.andExpect( status().isNotFound() )
+        when:
+        ResultActions castVote = mockMvc.perform(post("/vote")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"whoAmI\":\"glosujacy\",\"whoIVoteFor\":\"kandydat\"}"))
+
+        then:
+        castVote.andExpect( status().is2xxSuccessful() )
     }
 }

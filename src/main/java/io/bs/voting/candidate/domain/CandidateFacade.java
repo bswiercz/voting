@@ -2,6 +2,7 @@ package io.bs.voting.candidate.domain;
 
 import io.bs.voting.candidate.dto.CandidateDto;
 
+
 import javax.transaction.Transactional;
 
 import static java.util.Objects.requireNonNull;
